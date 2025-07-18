@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>คำนวณการบ้านไฟฟ้า Basic 200-115</title>
+<style>
+  /* ใส่ CSS ตามที่มีในตัวอย่างของคุณ */
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+    line-height: 1.6;
+  }
+  .main-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+  h1 {
+    color: #4a5568;
+    margin-bottom: 5px;
+  }
+  h1 span {
+    color: #7d9dff;
+    font-weight: 700;
+  }
+  .selector-container {
+    background-color: #fff;
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  #hw-select {
+    font-family: 'Sarabun', sans-serif;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e0;
+    background-color: #f7fafc;
+    font-size: 1.1em;
+    cursor: pointer;
+    width: 100%;
+    max-width: 400px;
+    font-weight: 600;
+    color: #4a5568;
+  }
+  #hw-select:focus {
+    outline: none;
+    border-color: #7d9dff;
+    box-shadow: 0 0 0 3px rgba(125, 157, 255, 0.3);
+  }
+  .hw-content {
+    background-color: #ffffff;
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+  .result {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #edf2f7;
+    border-radius: 5px;
+    font-weight: bold;
+    color: #2d3748;
+    min-height: 24px;
+    white-space: pre-wrap;
+  }
+  .input-group {
+    margin-bottom: 15px;
+  }
+  .input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  .input-group input {
+    width: calc(100% - 24px);
+    padding: 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 5px;
+    font-size: 1em;
+  }
+  .calc-button {
+    background-color: #2c7a7b;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+  }
+  .calc-button:hover {
+    background-color: #285e61;
+  }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+  <div class="header">
+    <h1>เครื่องคำนวณ 200-115<br><span>วิชาไฟฟ้า Basic 200-115</span></h1>
+  </div>
+
+  <div class="selector-container">
+    <label for="hw-select" style="font-size: 1.2em; font-weight: 600; color: #4a5568;">เลือกการบ้าน:</label><br><br>
+    <select id="hw-select"></select>
+  </div>
+
+  <div id="content-area" class="hw-content">
+    <p>โปรดเลือกการบ้านจากเมนูด้านบน</p>
+  </div>
+</div>
+
+    <script>
+    // ตัวแปรเก็บสถานะว่าโหลดสคริปต์ข้อไหนไปแล้ว
+    const loadedScripts = {};
+
+    // เติม option ใน select ตอนโหลดหน้า
+    document.addEventListener('DOMContentLoaded', () => {
+        const select = document.getElementById('hw-select');
+        for (let i = 1; i <= 13; i++) {
+        for (let j = 1; j <= 4; j++) {
+            const val = `Hw_${i}_${j}`;
+            const option = document.createElement('option');
+            option.value = val;
+            option.textContent = `Hw ${i}.${j}`;
+            select.appendChild(option);
+        }
+        }
+
+        // โหลด UI ของข้อแรกเลย (ถ้ามี)
+        if (select.value) loadSelectedUI(select.value);
+
+        // ฟังชันเมื่อเปลี่ยนเลือกการบ้าน
+        select.addEventListener('change', () => {
+        loadSelectedUI(select.value);
+        });
+    });
+
+    async function loadSelectedUI(hwId) {
+        const contentArea = document.getElementById('content-area');
+
+        if (!hwId) {
+        contentArea.innerHTML = '<p>โปรดเลือกการบ้าน</p>';
+        return;
+        }
+
+        // โหลดไฟล์ js ของ hwId ถ้ายังไม่โหลด
+        if (!loadedScripts[hwId]) {
+        try {
+            await loadScript(`scripts/${hwId}.js`);
+            loadedScripts[hwId] = true;
+        } catch {
+            contentArea.innerHTML = `<p>โหลดไฟล์สำหรับ ${hwId} ไม่สำเร็จ</p>`;
+            return;
+        }
+        }
+
+        // เรียกฟังก์ชันสร้าง UI จากไฟล์นั้น
+        if (typeof window[`getUI_${hwId}`] === 'function') {
+        contentArea.innerHTML = window[`getUI_${hwId}`]();
+        } else {
+        contentArea.innerHTML = `<p>ไม่พบเนื้อหาไฟล์ ${hwId}</p>`;
+        }
+    }
+
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+        });
+    }
+
+    function runCalculation(hwId) {
+        const inputs = {};
+        document.querySelectorAll(`#content-area input`).forEach(input => {
+        const key = input.id.replace(hwId + '-', '');
+        inputs[key] = parseFloat(input.value);
+        });
+
+        if (typeof window[`calculate_${hwId.toLowerCase()}`] === 'function') {
+        const result = window[`calculate_${hwId.toLowerCase()}`](inputs);
+        const resultDiv = document.getElementById(`result-${hwId}`);
+        if (resultDiv) {
+            // แสดงผลเป็น key: value แยกบรรทัด
+            resultDiv.innerHTML = Object.entries(result).map(([k,v]) => `${k}: ${v}`).join('<br>');
+        }
+        } else {
+        alert(`ไม่พบฟังก์ชัน calculate_${hwId.toLowerCase()} ในไฟล์ ${hwId}.js`);
+        }
+    }
+    </script>
+    
+</body>
+</html>
